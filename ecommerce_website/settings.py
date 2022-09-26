@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-nbudrqkf^+r1g6-2&98f*&(%k^ln%u$s8ibjo-o^144#xk%z90
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['gno-ecommerce-api.up.railway.app','127.0.0.1:8000']
 
 
 # Application definition
