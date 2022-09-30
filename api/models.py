@@ -1,10 +1,11 @@
 from itertools import product
+from tkinter import FLAT
 from django.db import models
 from django.conf import settings  
 from django.contrib.auth.models import User
 from django.dispatch import receiver
-from django.db.models.signals import post_save
-
+from django.db.models.signals import post_save,pre_save
+from django.db.models import Sum,Max,Min
 
 class Category(models.Model):
     name = models.CharField(max_length=100)
@@ -45,23 +46,24 @@ class Item(models.Model):
 
 class Cart(models.Model):
     created_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.CASCADE,unique=True)
-    total = models.DecimalField(max_digits=50, decimal_places=2, default=0.00)
-    order_items = models.ManyToManyField(Item)
+    total = models.FloatField(default=0.00)
+    order_items = models.ManyToManyField(Item,null=True,blank=True)
 
     def __str__(self) -> str:
-        return 'cart'
+        return f'cart'
 
 @receiver(post_save, sender=User)
 def cart_create(sender, instance=None, created=False, **kwargs):
     if created:
         Cart.objects.create(created_by=instance)
-
-# @receiver(post_save, sender=Item)
-# def item_create(sender, instance=User, created=None, **kwargs):
-#     if created:
-#         product = Product.objects.get(name=instance)
-#         items = Item.objects.get(product=product)
-#         cart = Cart.objects.get(created_by=items.user)
-#         cart.total = items.product.price*items.qty
-#         cart.save()
+    
+# @receiver(post_save,sender=Cart)
+# def update_cart_total(sender,instance,created,**kwargs):
+#     if not created:
+#         cart = instance
+#         user = cart.created_by.id
+#         cart = Cart.objects.filter(created_by=user)
+#         cart = cart.annotate(total_price=Sum('order_items__name__price')).get()
+#         print(cart.total_price)
         
+   

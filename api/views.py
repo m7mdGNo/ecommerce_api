@@ -1,21 +1,21 @@
+from ast import Delete
 from itertools import product
 from django.shortcuts import render
 from django.http import Http404
 from rest_framework.decorators import APIView
 from rest_framework import generics
 from .models import Product,Category,Brand,Cart,Item
-from .serilizers import ItemSerializer, ProdcutSerializer,CategorySerializer,BrandSerializer,CartSerializer
+from .serilizers import ProdcutSerializer,CategorySerializer,BrandSerializer,CartSerializer,CreateItemSerializer,DeleteItemSerializer
 from rest_framework.response import Response
-
+from django.db.models import Sum
+from rest_framework.pagination import LimitOffsetPagination
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 
 # handle product operations
 class ProductsView(generics.ListAPIView):
     queryset = Product.objects.all()
     serializer_class = ProdcutSerializer
-
-    def get(self, request, *args, **kwargs):
-        return self.list(request, *args, **kwargs)
 
 class ProductCreateView(generics.CreateAPIView):
     queryset = Product.objects.all()
@@ -39,31 +39,15 @@ class ProductDeleteView(generics.RetrieveDestroyAPIView):
 class ProductFilterView(generics.ListAPIView):
     queryset = Product.objects.all()
     serializer_class = ProdcutSerializer
+    pagination_class = LimitOffsetPagination
 
-    def get_objects(self,category):
-        try:
-            return self.queryset.filter(category=category)
-        except Product.DoesNotExist:
-            raise Http404
-    
-    def get(self,request,category,num_of_products):
-        try:
-            products = self.get_objects(category=Category.objects.get(name=category))[:int(num_of_products)]
-            serializer = ProdcutSerializer(products,many=True)
-            return Response(serializer.data)
-        
-        except:   
-            products = self.get_objects(category=Category.objects.get(name=category))
-            serializer = ProdcutSerializer(products,many=True)
-            return Response(serializer.data)
+    def get_queryset(self):
+        return self.queryset.filter(category=self.kwargs['category'])
 
 # handle Category operations
 class CategoryView(generics.ListAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-
-    def get(self, request, *args, **kwargs):
-        return self.list(request, *args, **kwargs)
 
 class CategoryCreateView(generics.CreateAPIView):
     queryset = Category.objects.all()
@@ -84,7 +68,6 @@ class CategoryDeleteView(generics.RetrieveDestroyAPIView):
     serializer_class = CategorySerializer
     lookup_field = 'id'
 
- 
 # handle Brand operations
 class BrandView(generics.ListAPIView):
     queryset = Brand.objects.all()
@@ -116,27 +99,18 @@ class BrandDeleteView(generics.RetrieveDestroyAPIView):
 class CartView(generics.RetrieveAPIView):
     queryset = Cart.objects.all()
     serializer_class = CartSerializer
-    lookup_field = 'id'
 
-    def get(self,request,id,*args, **kwargs):
-        user = request.user
-        cart = Cart.objects.get(created_by=user)
-        items = Item.objects.filter(user=user)
-        total = 0
-        for item in items:
-            product = Product.objects.get(id=item.name.id)
-            total += product.price*Item.objects.get(id=item.id).qty
-            cart.order_items.add(item)
-        cart.total = total
-        cart.save()
-        serializer = CartSerializer(Cart.objects.filter(id=id),many=True)
-        return Response(serializer.data)
+
+    def get_object(self):
+        cart = Cart.objects.filter(created_by=self.request.user).annotate(total_price=Sum('order_items__name__price')).get()
+        cart.total = cart.total_price
+        return cart
 
 class AddItemView(generics.ListCreateAPIView):
     queryset = Item.objects.all()
-    serializer_class = ItemSerializer
+    serializer_class = CreateItemSerializer
 
 class ItemDeleteView(generics.RetrieveDestroyAPIView):
     queryset = Item.objects.all()
-    serializer_class = ItemSerializer
+    serializer_class = DeleteItemSerializer
     lookup_field = 'id'
