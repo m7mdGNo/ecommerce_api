@@ -1,15 +1,14 @@
-from ast import Delete
-from itertools import product
 from django.shortcuts import render
 from django.http import Http404
 from rest_framework.decorators import APIView
 from rest_framework import generics
 from .models import Product,Category,Brand,Cart,Item
-from .serilizers import ProdcutSerializer,CategorySerializer,BrandSerializer,CartSerializer,CreateItemSerializer,DeleteItemSerializer
+from .serilizers import ProdcutSerializer,CategorySerializer,BrandSerializer,CartSerializer,CreateItemSerializer,DeleteItemSerializer,ProdcutAddDiscountSerializer,UpdateProdcutSerializer
 from rest_framework.response import Response
-from django.db.models import Sum
+from django.db.models import Sum,Count
 from rest_framework.pagination import LimitOffsetPagination
 from django.contrib.auth.mixins import LoginRequiredMixin
+from .mixins import Is_admin_mixins
 
 
 # handle product operations
@@ -20,6 +19,7 @@ class ProductsView(generics.ListAPIView):
 class ProductCreateView(generics.CreateAPIView):
     queryset = Product.objects.all()
     serializer_class = ProdcutSerializer
+    lookup_field = 'id'
 
 class ProductDetailsView(generics.RetrieveAPIView):
     queryset = Product.objects.all()
@@ -28,7 +28,7 @@ class ProductDetailsView(generics.RetrieveAPIView):
 
 class productUpdateView(generics.RetrieveUpdateAPIView):
     queryset = Product.objects.all()
-    serializer_class = ProdcutSerializer
+    serializer_class = UpdateProdcutSerializer
     lookup_field = 'id'
 
 class ProductDeleteView(generics.RetrieveDestroyAPIView):
@@ -44,9 +44,21 @@ class ProductFilterView(generics.ListAPIView):
     def get_queryset(self):
         return self.queryset.filter(category=self.kwargs['category'])
 
+class ProductAddDiscount(Is_admin_mixins,generics.RetrieveUpdateAPIView):
+    queryset = Product.objects.all()
+    serializer_class = ProdcutAddDiscountSerializer
+    lookup_field = 'id'
+
+    def update(self, request, *args, **kwargs):
+        response = super().update(request, *args, **kwargs)
+        product = Product.objects.filter(id=self.kwargs['id']).get()
+        product.price_after_discount = product.price-(product.price*(product.discount/100))
+        product.save() 
+        return response
+
 # handle Category operations
 class CategoryView(generics.ListAPIView):
-    queryset = Category.objects.all()
+    queryset = Category.objects.all().annotate(num_of_products=Count('product'))
     serializer_class = CategorySerializer
 
 class CategoryCreateView(generics.CreateAPIView):

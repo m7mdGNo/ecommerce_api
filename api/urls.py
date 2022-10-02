@@ -2,7 +2,7 @@ from django.urls import path,include
 from django.urls import path,include
 from django.conf import settings  
 from django.conf.urls.static import static
-from .views import ProductsView,ProductDetailsView,ProductFilterView,ProductDeleteView,ProductCreateView,productUpdateView
+from .views import ProductsView,ProductDetailsView,ProductFilterView,ProductDeleteView,ProductCreateView,productUpdateView,ProductAddDiscount
 from .views import CategoryView,CategoryDeleteView,CategoryCreateView,CategoryUpdateView,CategoryDetailsView
 from .views import BrandView,BrandDeleteView,BrandCreateView,BrandUpdateView,BrandDetailsView
 from .views import CartView,AddItemView,ItemDeleteView
@@ -37,6 +37,7 @@ urlpatterns = [
   path('product_update/<int:id>/',productUpdateView.as_view()),
   path('product_delete/<int:id>/',ProductDeleteView.as_view()),
   path('productfilter/<str:category>/',ProductFilterView.as_view()),
+  path('add_discount/<int:id>/',ProductAddDiscount.as_view()),
   #category endpoints
   path('category/',CategoryView.as_view()),
   path('category_create/',CategoryCreateView.as_view()),
