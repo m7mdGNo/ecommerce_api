@@ -2,8 +2,9 @@ from django.shortcuts import render
 from django.http import Http404
 from rest_framework.decorators import APIView
 from rest_framework import generics
-from .models import Product,Category,Brand,Cart,Item
+from .models import Product,Category,Brand,Cart,Item,wishlist,wishlist_items
 from .serilizers import ProdcutSerializer,CategorySerializer,BrandSerializer,CartSerializer,CreateItemSerializer,DeleteItemSerializer,ProdcutAddDiscountSerializer,UpdateProdcutSerializer
+from .serilizers import WishListSerializer,Add_item_to_wishlistSerializer
 from rest_framework.response import Response
 from django.db.models import Sum,Count
 from rest_framework.pagination import LimitOffsetPagination
@@ -126,3 +127,12 @@ class ItemDeleteView(generics.RetrieveDestroyAPIView):
     queryset = Item.objects.all()
     serializer_class = DeleteItemSerializer
     lookup_field = 'id'
+
+#add to wishlist operations
+class WishListView(generics.ListAPIView):
+    queryset = wishlist.objects.all()
+    serializer_class = WishListSerializer
+
+class AddToWishListView(generics.ListCreateAPIView):
+    queryset = wishlist_items.objects.all()
+    serializer_class = Add_item_to_wishlistSerializer

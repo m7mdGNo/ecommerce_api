@@ -6,6 +6,7 @@ from .views import ProductsView,ProductDetailsView,ProductFilterView,ProductDele
 from .views import CategoryView,CategoryDeleteView,CategoryCreateView,CategoryUpdateView,CategoryDetailsView
 from .views import BrandView,BrandDeleteView,BrandCreateView,BrandUpdateView,BrandDetailsView
 from .views import CartView,AddItemView,ItemDeleteView
+from .views import WishListView,AddToWishListView
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 
@@ -54,6 +55,9 @@ urlpatterns = [
   path('cart/',CartView.as_view()),
   path('add_item/',AddItemView.as_view()),
   path('item_delete/<int:id>/',ItemDeleteView.as_view()),
+  #wish list endpoints
+  path('wish_list/',WishListView.as_view()),
+  path('add_to_wishlist/',AddToWishListView.as_view())
 
 ]
 

@@ -1,6 +1,6 @@
 from rest_framework.serializers import ModelSerializer,Serializer
 from rest_framework import serializers
-from .models import Product,Brand,Category,Cart,Item
+from .models import Product,Brand,Category,Cart,Item,wishlist,wishlist_items
 from django.contrib.auth.models import User
 
 class UpdateProdcutSerializer(ModelSerializer):
@@ -40,21 +40,15 @@ class CreateItemSerializer(ModelSerializer):
         model = Item
         fields = '__all__'
     
-    # def save(self,**kwargs):
-    #     user = self.validated_data['user']
-    #     name = self.validated_data['name']
-    #     qty = self.validated_data['qty']
-    #     cart = Cart.objects.get(created_by=user)
-    #     product = Product.objects.get(name=name)
-    #     price = product.price
-    #     cart.total += qty*price
-    #     super().save(**kwargs)
-    #     id = self.instance.id
-    #     item = Item.objects.filter(user=user).get(id=id)
-    #     cart.order_items.add(item)
-    #     cart.save()
-
-    #     return super().save(**kwargs)
+    def save(self,**kwargs):
+        user = self.validated_data['user']
+        cart = Cart.objects.get(created_by=user)
+        super_return = super().save(**kwargs)
+        id = self.instance.id
+        item = Item.objects.filter(user=user).get(id=id)
+        cart.order_items.add(item)
+        cart.save()
+        return super_return
 
 class CartSerializer(ModelSerializer):
     order_items = CreateItemSerializer(many=True)
@@ -67,16 +61,22 @@ class DeleteItemSerializer(ModelSerializer):
         model = Item
         fields = '__all__'
     
-    # def save(self,**kwargs):
-    #     user = self.validated_data['user']
-    #     name = self.validated_data['name']
-    #     cart = Cart.objects.get(created_by=user)
-    #     # cart.order_items.all().
-    #     product = Product.objects.get(name=name)
-    #     price = product.price
-    #     print(price)
-    #     cart.total -= price
-    #     cart.save()
-
-    #     return super().save(**kwargs)
+class Add_item_to_wishlistSerializer(ModelSerializer):
+    class Meta:
+        model = wishlist_items
+        fields = '__all__'
     
+    def save(self, **kwargs):
+        user = self.validated_data['user']
+        wish_list = wishlist.objects.get(user=user)
+        super_return = super().save(**kwargs)
+        id = self.instance.id
+        item = wishlist_items.objects.filter(user=user).get(id=id)
+        wish_list.items.add(item)
+        wish_list.save()
+        return super_return
+
+class WishListSerializer(ModelSerializer):
+    class Meta:
+        model = wishlist
+        fields = '__all__'
